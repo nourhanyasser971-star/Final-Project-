@@ -1,6 +1,8 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <ctime>
+#include <cmath>
 using namespace std;
 
 // =====================================================
@@ -218,7 +220,7 @@ class PricingStrategy
 {
 public:
     virtual ~PricingStrategy() {}
-    // TODO: virtual double calculatePrice(int durationMinutes) const = 0;
+    virtual double calculatePrice(int durationMinutes) const = 0;
 };
 
 
@@ -228,7 +230,11 @@ public:
 class NormalPricing : public PricingStrategy
 {
 public:
-    // TODO: double calculatePrice(int durationMinutes) const override;
+    double calculatePrice(int durationMinutes) const override
+    {
+        int hours = ceil(durationMinutes / 60.0);
+        return hours * 10;
+    }
 };
 
 
@@ -238,7 +244,11 @@ public:
 class VipPricing : public PricingStrategy
 {
 public:
-    // TODO: double calculatePrice(int durationMinutes) const override;
+    double calculatePrice(int durationMinutes) const override
+    {
+        int hours = ceil(durationMinutes / 60.0);
+        return hours * 20;
+    }
 };
 
 
@@ -288,19 +298,80 @@ class ParkingSession
 private:
     int id;
     int reservationId;
-    string checkInTime;
-    string checkOutTime;
+    time_t checkInTime;
+    time_t checkOutTime;
     bool isActive;
 
-public:
-    // ---- Constructors ----
-    ParkingSession();
-    // TODO: ParkingSession(int reservationId);
+    // The database functions take the time as a string
+    string toText(time_t t)
+    {
+        char buf[20];
+        strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", localtime(&t));
+        return buf;
+    }
 
-    // ---- Behavior ----
-    // TODO: void checkIn();
-    // TODO: void checkOut();
-    // TODO: int getDurationMinutes() const;
+public:
+    ParkingSession()
+    {
+        id = 0;
+        reservationId = 0;
+        checkInTime = 0;
+        checkOutTime = 0;
+        isActive = false;
+    }
+    ParkingSession(int reservationId)
+    {
+        id = 0;
+        this->reservationId = reservationId;
+        checkInTime = 0;
+        checkOutTime = 0;
+        isActive = false;
+    }
+
+    int getId() const { return id; }
+
+    void checkIn(Database& db)
+    {
+        if (isActive)
+        {
+            cout << "Already checked in." << endl;
+            return;
+        }
+        time_t now = time(0);
+        if (db.insertSession(reservationId, toText(now), &id))
+        {
+            checkInTime = now;
+            isActive = true;
+        }
+    }
+
+    void checkOut(Database& db)
+    {
+        if (!isActive)
+        {
+            cout << "Error: no check-in found." << endl;
+            return;
+        }
+        time_t now = time(0);
+        if (now < checkInTime)
+        {
+            cout << "Error: negative duration." << endl;
+            return;
+        }
+        if (db.closeSession(id, toText(now)))
+        {
+            checkOutTime = now;
+            isActive = false;
+        }
+    }
+
+    int getDurationMinutes() const
+    {
+        if (checkInTime == 0)
+            return -1;
+        time_t end = isActive ? time(0) : checkOutTime;
+        return ceil(difftime(end, checkInTime) / 60.0);
+    }
 };
 
 
@@ -322,13 +393,39 @@ private:
     PaymentStatus status;
 
 public:
-    // ---- Constructors ----
-    Payment();
-    // TODO: Payment(int sessionId, double amount);
+    Payment()
+    {
+        id = 0;
+        sessionId = 0;
+        amount = 0;
+        status = PaymentStatus::Pending;
+    }
+    Payment(int sessionId, double amount)
+    {
+        id = 0;
+        this->sessionId = sessionId;
+        this->amount = amount;
+        status = PaymentStatus::Pending;
+    }
 
-    // ---- Behavior ----
-    // TODO: bool processPayment();
-    // TODO: double calculateAmount(const ParkingSession& session, const PricingStrategy& strategy);
+    double calculateAmount(const ParkingSession& session, const PricingStrategy& strategy)
+    {
+        int minutes = session.getDurationMinutes();
+        if (minutes < 0)
+            return 0;
+        amount = strategy.calculatePrice(minutes);
+        return amount;
+    }
+
+    bool processPayment(Database& db)
+    {
+        if (!db.insertPayment(sessionId, amount, &id))
+            return false;
+        if (!db.markPaymentAsPaid(id))
+            return false;
+        status = PaymentStatus::Paid;
+        return true;
+    }
 };
 
 
