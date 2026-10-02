@@ -28,10 +28,31 @@ public:
     // TODO: bool validateLogin(const string& username, const string& password);
 
     // ---- Customer ----
-    // TODO: bool insertCustomer(/* Customer params */);
-    // TODO: bool updateCustomer(/* Customer params */);
-    // TODO: bool deleteCustomer(int customerId);
-    // TODO: /* list */ getAllCustomers();
+
+bool Database::insertCustomer(const string& name, const string& phone, const string& email) {
+    string query = "INSERT INTO customer (name, phone, email) VALUES ('" +
+                   name + "', '" + phone + "', '" + email + "');";
+    return executeQuery(query);
+}
+
+bool Database::updateCustomer(int customerId, const string& name, const string& phone, const string& email) {
+    string query = "UPDATE customer SET name = '" + name +
+                   "', phone = '" + phone +
+                   "', email = '" + email +
+                   "' WHERE customer_id = " + to_string(customerId) + ";";
+    return executeQuery(query);
+}
+
+bool Database::deleteCustomer(int customerId) {
+    string query = "DELETE FROM customer WHERE customer_id = " + to_string(customerId) + ";";
+    return executeQuery(query);
+}
+vector<Customer> Database::getAllCustomers() {
+    vector<Customer> customersList;
+    string query = "SELECT customer_id, name, phone, email FROM customer;";
+
+    return customersList;
+}
 
     // ---- Vehicle ----
     // TODO: bool insertVehicle(/* Vehicle params */);

@@ -42,17 +42,44 @@ private:
 
 public:
     // ---- Constructors ----
-    Customer();
-    // TODO: Customer(int id, string name, string phone, string email);
+    Customer() {
+        id = 0;
+        name = "";
+        phone = "";
+        email = "";
+    }
+    Customer(int id, string name, string phone, string email) {
+        this->id = id;
+        this->name = name;
+        this->phone = phone;
+        this->email = email;
+    }
 
     // ---- Getters / Setters ----
-    // TODO: int getId() const;
-    // TODO: string getName() const;
-    // TODO: void setPhone(const string& phone);
+    int getId() const { return id; }
+    string getName() const { return name; }
+    string getPhone() const { return phone; }
+    string getEmail() const { return email; }
 
+    void setName(const string& newName) { name = newName; }
+    void setPhone(const string& newPhone) { phone = newPhone; }
+    void setEmail(const string& newEmail) { email = newEmail; }
     // ---- Behavior ----
-    // TODO: bool save();      // insert/update in DB via Database class
-    // TODO: bool remove();    // delete from DB
+    bool save(Database& db) {
+        if (name.empty() || phone.empty()) {
+            cout << "Error: Name and phone cannot be empty!" << endl;
+            return false;
+        }
+        if (id == 0) {
+            return db.insertCustomer(name, phone, email);
+        } else {
+            return db.updateCustomer(id, name, phone, email);
+        }
+    }
+    bool remove(Database& db) {
+        if (id == 0) return false;
+        return db.deleteCustomer(id);
+    }
 };
 
 
