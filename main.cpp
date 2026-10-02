@@ -1,11 +1,7 @@
 #include <iostream>
 #include <string>
-#include <vector>
 using namespace std;
 
-// =====================================================
-// Employee
-// =====================================================
 class Employee
 {
 private:
@@ -15,17 +11,48 @@ private:
     string name;
 
 public:
-    // ---- Constructors ----
-    Employee();
-    // TODO: Employee(int id, string username, string password, string name);
+    // Default Constructor
+    Employee()
+    {
+        id = 0;
+        username = "";
+        password = "";
+        name = "";
+    }
 
-    // ---- Getters / Setters ----
-    // TODO: int getId() const;
-    // TODO: string getUsername() const;
-    // TODO: void setName(const string& name);
+    // Parameterized Constructor
+    Employee(int id, string username, string password, string name)
+    {
+        this->id = id;
+        this->username = username;
+        this->password = password;
+        this->name = name;
+    }
 
-    // ---- Behavior ----
-    // TODO: bool login(const string& username, const string& password);
+    // Getter for ID
+    int getId() const
+    {
+        return id;
+    }
+
+    // Getter for Username
+    string getUsername() const
+    {
+        return username;
+    }
+
+    // Setter for Name
+    void setName(const string& name)
+    {
+        this->name = name;
+    }
+
+    // Login Function
+    bool login(const string& username, const string& password)
+    {
+        return (this->username == username &&
+                this->password == password);
+    }
 };
 
 
